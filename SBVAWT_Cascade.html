@@ -7,7 +7,7 @@
 <script>
 (function(){try{var t=localStorage.getItem('sbvawt-theme');document.documentElement.setAttribute('data-theme',t==='dark'?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();
 </script>
-<title>SB-VAWT Cascade Workbench v2.9.0 — Airfoil-to-Energy Analysis</title>
+<title>SB-VAWT Cascade Workbench v3.0.0 — Airfoil-to-Energy Analysis</title>
 <style>
 :root{
   --bg:#f6f7f5; --panel:#fff; --panel2:#fafaf8; --ink:#1a1d1a; --muted:#666b66;
@@ -73,6 +73,8 @@ th:first-child,td:first-child{text-align:left}
 tbody tr:hover{background:var(--panel2)}
 svg.chart{width:100%;height:auto;display:block;overflow:visible}
 .chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:14px}
+.legend-item{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.legend-item svg{flex:0 0 auto;overflow:visible}
 .legend{font-size:12px;color:var(--muted);margin-top:4px}
 .files{font-family:var(--mono);font-size:12px;color:var(--muted);max-height:120px;overflow:auto;margin-top:8px}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:3px 14px;font-size:13px}
@@ -171,7 +173,7 @@ input.invalid,select.invalid,textarea.invalid{border-color:var(--err)!important;
 <button aria-selected="false" data-t="references" role="tab">References</button>
 <button aria-selected="false" data-t="help" role="tab">Help</button>
 </nav></aside><main class="main-area"><button aria-controls="sidebar" aria-expanded="false" class="btn mobile-menu" id="mobile-menu" type="button">☰ Menu</button><div class="wrap"><header>
-<h1>SB-VAWT Cascade Workbench v2.9.0</h1>
+<h1>SB-VAWT Cascade Workbench v3.0.0</h1>
 <span class="sub">straight-bladed vertical-axis wind turbine · Cascade-reference aerodynamic analysis, validation, energy yield and AI surrogate workbench</span>
 <span class="status"><span class="dot" id="dot"></span><span id="engine">engine: starting…</span></span>
 </header><div class="note engine-note" style="margin:8px 0 0">
@@ -2538,7 +2540,7 @@ startRuntimeDependencies();
 
 
 /* ── v2.0 UI architecture / offline-safe runtime bootstrap ───────────── */
-const APP_VERSION='2.9.0';
+const APP_VERSION='3.0.0';
 function applyTheme(mode){
   const theme=mode==='dark'?'dark':'light';document.documentElement.setAttribute('data-theme',theme);
   try{localStorage.setItem('sbvawt-theme',theme);}catch(_){ }
@@ -4239,6 +4241,187 @@ $('#b-runall-csv').onclick=()=>{
   const L=['stage,outcome,detail,seconds'];
   runAllLog.forEach(r=>L.push([JSON.stringify(r.label),r.state,JSON.stringify(r.detail||''),r.seconds??''].join(',')));
   save('sbvawt_run_all_stages.csv',L.join('\n'));
+};
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   v3.0.0 — figures that survive black-and-white printing.
+
+   The previous renderer distinguished series by colour alone and drew every
+   marked point as a circle, so a photocopied or greyscale figure lost the
+   distinction entirely. Series are now separated by three independent
+   channels — marker shape, marker fill, and line dash — with colour kept
+   only as a fourth, redundant cue.
+
+   The Validation convention follows normal journal practice: measurement is
+   filled squares with 95% uncertainty bars and no connecting line, because
+   the points are discrete observations rather than a curve; model output is
+   a continuous line with open markers.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Shapes and dash patterns in the order they are auto-assigned. Open shapes
+   read differently from filled ones even at low print resolution. */
+const CHART_MARKERS=['circle','triangle','diamond','square','triangle-down'];
+const CHART_DASHES=['','7 4','2 3','11 3 2 3','1 3'];
+
+function chartGlyph(shape,cx,cy,r,color,filled){
+  const f=filled?color:'var(--card,#fff)', sw=filled?0:1.6;
+  const at=(p)=>p.map(([a,b])=>`${(cx+a*r).toFixed(2)},${(cy+b*r).toFixed(2)}`).join(' ');
+  switch(shape){
+    case 'square':   return `<rect x="${(cx-r).toFixed(2)}" y="${(cy-r).toFixed(2)}" width="${(2*r).toFixed(2)}" height="${(2*r).toFixed(2)}" fill="${f}" stroke="${color}" stroke-width="${sw||1.2}"/>`;
+    case 'triangle': return `<polygon points="${at([[0,-1.15],[1,0.75],[-1,0.75]])}" fill="${f}" stroke="${color}" stroke-width="${sw||1.2}"/>`;
+    case 'triangle-down': return `<polygon points="${at([[0,1.15],[1,-0.75],[-1,-0.75]])}" fill="${f}" stroke="${color}" stroke-width="${sw||1.2}"/>`;
+    case 'diamond':  return `<polygon points="${at([[0,-1.25],[1.1,0],[0,1.25],[-1.1,0]])}" fill="${f}" stroke="${color}" stroke-width="${sw||1.2}"/>`;
+    case 'cross':    return `<path d="M${(cx-r).toFixed(2)} ${cy.toFixed(2)}H${(cx+r).toFixed(2)}M${cx.toFixed(2)} ${(cy-r).toFixed(2)}V${(cy+r).toFixed(2)}" stroke="${color}" stroke-width="1.8"/>`;
+    case 'none':     return '';
+    default:         return `<circle cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="${r.toFixed(2)}" fill="${f}" stroke="${color}" stroke-width="${sw||1.2}"/>`;
+  }
+}
+
+/* Resolve one series' drawing style. Anything the caller set explicitly wins;
+   the rest is auto-assigned from the series index so two curves in the same
+   figure never share both a shape and a dash. */
+function chartStyle(s,i){
+  const color=SER_COLORS[i%SER_COLORS.length];
+  const dash = s.dash===true ? '7 4'
+             : (typeof s.dash==='string' ? s.dash : CHART_DASHES[i%CHART_DASHES.length]);
+  let marker = s.marker;
+  if(marker===undefined) marker = s.points ? CHART_MARKERS[i%CHART_MARKERS.length] : 'none';
+  return {color, dash, marker,
+          filled: s.filled===undefined ? false : !!s.filled,
+          noLine: !!s.noLine,
+          width: s.width||2,
+          every: Math.max(1,Math.round(s.markerEvery||1)),
+          r: s.markerSize||3.1};
+}
+
+chart = function(title, xlab, ylab, xs, series){
+  const W=460,H=250,ml=56,mr=14,mt=26,mb=40;
+  const allY=series.flatMap(s=>{
+    const base=s.v.map(Number);
+    if(!s.err) return base;
+    return base.concat(base.map((y,k)=>y+Number(s.err[k]||0)),
+                       base.map((y,k)=>y-Number(s.err[k]||0)));
+  }).filter(isFinite);
+  const allX=series.flatMap(s=>(s.x||xs).map(Number)).filter(isFinite);
+  const box=document.createElement('div');
+  if(!allY.length||!allX.length){ box.innerHTML=`<div class="small">${title}: no finite data</div>`; return box; }
+  let y0=Math.min(...allY), y1=Math.max(...allY);
+  if(y0>0) y0=0; if(y1===y0) y1=y0+1;
+  const pad=(y1-y0)*0.08; y0-=pad; y1+=pad;
+  const x0=Math.min(...allX), x1=Math.max(...allX);
+  const X=v=>ml+((v-x0)/((x1-x0)||1))*(W-ml-mr);
+  const Y=v=>H-mb-((v-y0)/((y1-y0)||1))*(H-mt-mb);
+  const ticks=(a,b,n)=>{const o=[];for(let i=0;i<=n;i++)o.push(a+(b-a)*i/n);return o;};
+  let g='';
+  ticks(y0,y1,4).forEach(t=>{g+=`<line x1="${ml}" y1="${Y(t).toFixed(1)}" x2="${W-mr}" y2="${Y(t).toFixed(1)}" stroke="var(--line)" stroke-width="1"/>`+
+    `<text x="${ml-7}" y="${(Y(t)+4).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--muted)">${t.toFixed(Math.abs(y1-y0)<1?3:2)}</text>`;});
+  ticks(x0,x1,5).forEach(t=>{g+=`<text x="${X(t).toFixed(1)}" y="${H-mb+15}" text-anchor="middle" font-size="10" fill="var(--muted)">${t.toFixed(1)}</text>`;});
+  if(y0<0&&y1>0) g+=`<line x1="${ml}" y1="${Y(0).toFixed(1)}" x2="${W-mr}" y2="${Y(0).toFixed(1)}" stroke="var(--muted)" stroke-width="1"/>`;
+
+  const styles=series.map(chartStyle);
+
+  /* Uncertainty bars go down first so markers sit on top of them. */
+  series.forEach((s,si)=>{
+    if(!s.err) return;
+    const st=styles[si], sx=s.x||xs;
+    s.v.forEach((yv,k)=>{
+      const y=Number(yv), x=Number(sx[k]), e=Number(s.err[k]);
+      if(!isFinite(y)||!isFinite(x)||!isFinite(e)||e<=0) return;
+      const px=X(x).toFixed(2), hi=Y(y+e).toFixed(2), lo=Y(y-e).toFixed(2), cap=3.2;
+      g+=`<path d="M${px} ${hi}V${lo}M${(X(x)-cap).toFixed(2)} ${hi}H${(X(x)+cap).toFixed(2)}M${(X(x)-cap).toFixed(2)} ${lo}H${(X(x)+cap).toFixed(2)}" stroke="${st.color}" stroke-width="1.1" fill="none"/>`;
+    });
+  });
+
+  series.forEach((s,si)=>{
+    const st=styles[si], sx=s.x||xs;
+    let d='',pen=false,mk='';
+    s.v.forEach((yv,k)=>{
+      const y=Number(yv), x=Number(sx[k]);
+      if(!isFinite(y)||!isFinite(x)){pen=false;return;}
+      d += (pen?'L':'M') + X(x).toFixed(1) + ' ' + Y(y).toFixed(1) + ' '; pen=true;
+      if(st.marker!=='none' && k%st.every===0)
+        mk += chartGlyph(st.marker, X(x), Y(y), st.r, st.color, st.filled);
+    });
+    if(!st.noLine)
+      g += `<path d="${d}" fill="none" stroke="${st.color}" stroke-width="${st.width}" ${st.dash?`stroke-dasharray="${st.dash}"`:''} stroke-linejoin="round"/>`;
+    g += mk;
+  });
+
+  g += `<text x="${ml}" y="15" font-size="12" font-weight="600" fill="var(--ink)">${title}</text>`;
+  g += `<text x="${W/2}" y="${H-4}" text-anchor="middle" font-size="10" fill="var(--muted)">${xlab}</text>`;
+  g += `<text x="12" y="${H/2}" text-anchor="middle" font-size="10" fill="var(--muted)" transform="rotate(-90 12 ${H/2})">${ylab}</text>`;
+
+  /* The legend draws each series' actual line and marker, so it still reads
+     when the figure is printed in greyscale. */
+  const key=series.map((s,i)=>{
+    const st=styles[i];
+    const line=st.noLine?'':`<path d="M2 8H26" stroke="${st.color}" stroke-width="${st.width}" ${st.dash?`stroke-dasharray="${st.dash}"`:''} fill="none"/>`;
+    const glyph=st.marker==='none'?'':chartGlyph(st.marker,14,8,st.r+0.4,st.color,st.filled);
+    return `<span class="legend-item"><svg width="28" height="16" viewBox="0 0 28 16" aria-hidden="true">${line}${glyph}</svg> ${escapeHtml(s.name||'')}</span>`;
+  }).join('');
+  box.innerHTML = `<svg class="chart" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${g}</svg>`+
+    (series.length>1?`<div class="legend">${key}</div>`:'');
+  return box;
+};
+
+/* ── Validation figure conventions ────────────────────── */
+/* Measurement: filled square, 95% bars, no connecting line.
+   Model:       continuous/dashed line with an open marker. */
+function expSeries(name,x,v,err){
+  return {name,x,v,err,marker:'square',filled:true,noLine:true,markerEvery:1,markerSize:3.6};
+}
+function modelSeries(name,x,v,i,n){
+  const shapes=['circle','triangle','diamond','triangle-down'];
+  const dashes=['','7 4','2 3','11 3 2 3'];
+  const every=Math.max(1,Math.ceil((x?.length||n||1)/12));
+  return {name,x,v,marker:shapes[i%shapes.length],filled:false,
+          dash:dashes[i%dashes.length],markerEvery:every};
+}
+
+const _renderRefMetrics_v290=renderRefMetrics;
+renderRefMetrics=function(fallbackR=null){
+  _renderRefMetrics_v290(fallbackR);
+  const C=$('#validation-charts');
+  if(!C||!referenceCP?.tsr?.length) return;
+  const curves=validationAnalysisCurves(fallbackR);
+  if(!curves.length) return;
+  const detail=curves.map(c=>({c,p:validationPairsForCurve(c)})).filter(d=>d.p&&d.p.length);
+  if(!detail.length) return;
+  const targetName=(($('#val-target')?.value||'gross')==='net')?'net C_P':'gross C_P';
+  const useUnc=$('#val-use-unc')?.checked!==false;
+  const unc=(useUnc&&referenceCP.cp_unc95?.length)?referenceCP.cp_unc95:null;
+
+  C.innerHTML='';
+  const perf=detail.map((d,i)=>modelSeries(d.c.label,d.c.tsr,validationTargetForCurve(d.c),i,d.c.tsr.length));
+  perf.unshift(expSeries((referenceCP.name||'experiment')+(unc?' (95% bars)':''),
+                         referenceCP.tsr,referenceCP.cp,unc));
+  C.appendChild(chart('Measured benchmark vs Analysis results','TSR',targetName,referenceCP.tsr,perf));
+
+  const res=detail.map((d,i)=>modelSeries(d.c.label,d.p.map(x=>x.tsr),d.p.map(x=>x.err),i,d.p.length));
+  res.forEach(s=>{s.markerEvery=1;});
+  res.push({name:'zero error',x:[Math.min(...referenceCP.tsr),Math.max(...referenceCP.tsr)],
+            v:[0,0],marker:'none',dash:'2 3',width:1.2});
+  C.appendChild(chart('Residuals: predicted − measured','TSR','C_P error',referenceCP.tsr,res));
+
+  const obs=referenceCP.cp.map(Number).filter(Number.isFinite);
+  const predAll=detail.flatMap(d=>d.p.map(x=>x.pred));
+  const lo=Math.min(...obs,...predAll), hi=Math.max(...obs,...predAll);
+  const pv=detail.map((d,i)=>{const s=modelSeries(d.c.label,d.p.map(x=>x.obs),d.p.map(x=>x.pred),i,d.p.length);
+    s.noLine=true; s.markerEvery=1; return s;});
+  pv.push({name:'1:1',x:[lo,hi],v:[lo,hi],marker:'none',dash:'2 3',width:1.2});
+  C.appendChild(chart('Predicted vs measured','measured C_P','predicted C_P',obs,pv));
+
+  const note=document.createElement('div');
+  note.className='note';
+  note.style.marginTop='10px';
+  note.innerHTML='<strong>Figure convention.</strong> Measurement is drawn as '
+    +'<strong>filled squares</strong>'+(unc?' with 95% uncertainty bars':'')
+    +' and no connecting line, because those are discrete observations rather than a curve. '
+    +'Model output is a continuous or dashed line carrying an <strong>open</strong> marker '
+    +'\u2014 circle, triangle, then diamond. Shape, fill and dash are all independent of colour, '
+    +'so the figures stay readable in greyscale print and for colour-blind readers.';
+  C.appendChild(note);
 };
 
 </script>
