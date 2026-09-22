@@ -7,7 +7,7 @@
 <script>
 (function(){try{var t=localStorage.getItem('sbvawt-theme');document.documentElement.setAttribute('data-theme',t==='dark'?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();
 </script>
-<title>SB-VAWT Cascade Workbench v2.8.0 — Airfoil-to-Energy Analysis</title>
+<title>SB-VAWT Cascade Workbench v2.9.0 — Airfoil-to-Energy Analysis</title>
 <style>
 :root{
   --bg:#f6f7f5; --panel:#fff; --panel2:#fafaf8; --ink:#1a1d1a; --muted:#666b66;
@@ -171,7 +171,7 @@ input.invalid,select.invalid,textarea.invalid{border-color:var(--err)!important;
 <button aria-selected="false" data-t="references" role="tab">References</button>
 <button aria-selected="false" data-t="help" role="tab">Help</button>
 </nav></aside><main class="main-area"><button aria-controls="sidebar" aria-expanded="false" class="btn mobile-menu" id="mobile-menu" type="button">☰ Menu</button><div class="wrap"><header>
-<h1>SB-VAWT Cascade Workbench v2.8.0</h1>
+<h1>SB-VAWT Cascade Workbench v2.9.0</h1>
 <span class="sub">straight-bladed vertical-axis wind turbine · Cascade-reference aerodynamic analysis, validation, energy yield and AI surrogate workbench</span>
 <span class="status"><span class="dot" id="dot"></span><span id="engine">engine: starting…</span></span>
 </header><div class="note engine-note" style="margin:8px 0 0">
@@ -767,7 +767,13 @@ input.invalid,select.invalid,textarea.invalid{border-color:var(--err)!important;
 </div>
 <div class="step-nav"><button class="btn step-back" data-go="validation" type="button">← Back</button><button class="btn primary step-next" data-go="report" type="button">Next →</button></div></section><section class="" id="p-report" role="tabpanel"><h2 class="section-title">Report &amp; Export</h2><p class="section-lead">Generate a consolidated, printable record of the current project, model settings and available analysis outputs.</p>
 <div class="note"><strong>Safety, scope, and academic-integrity disclaimer:</strong> This application is an educational, preliminary-analysis tool. It uses simplified assumptions and user-entered values to support conceptual engineering learning and comparison of design alternatives. It is not a substitute for field measurements, laboratory characterization, detailed design, structural analysis, site investigation, applicable codes and standards, safety assessment, professional cost estimation, or verified life-cycle/greenhouse-gas accounting. Do not use the outputs directly for construction, procurement, investment approval, regulatory submission, or carbon-credit claims.<br/><br/><strong>Rotating/electromechanical systems:</strong> Real-world implementation requires site-specific detailed engineering, applicable codes and standards, safety measures, qualified supervision, inspection/testing, and compliance with local regulations.</div>
-<div class="card"><h2>Comprehensive report<button aria-label="Help: Comprehensive report" class="help-btn" data-help-text="This section contains controls and outputs for Comprehensive report. Review labels, units and warnings before running calculations." data-help-title="Comprehensive report" type="button">?</button></h2><div class="row" style="margin-bottom:10px"><button class="btn primary" id="b-build-report" type="button">Refresh report</button><button class="btn" id="b-savereport" type="button">Download HTML report</button><button class="btn" id="b-printreport" type="button">Print report</button></div><div class="report-preview" id="report-preview"><p>No analysis report generated yet. Choose <strong>Refresh report</strong>.</p></div></div>
+<div class="card">
+<h2>Run all stages<button aria-label="Help: Run all stages" class="help-btn" data-help-text="Walks the whole analysis chain in order and computes every tab. Each stage is run by the solver in this browser session; nothing is loaded from a file. Stages whose preconditions are not met are skipped with a reason rather than silently producing nothing." data-help-title="Run all stages" type="button">?</button></h2>
+<p class="small" style="margin-top:-4px">For the worked examples: fills every tab in one go so a newcomer can see a complete, finished study before changing anything. Expect several minutes — the surrogate dataset and the model-form study are the slow parts.</p>
+<div class="note" style="margin-top:10px"><strong>Install the airfoil polars first.</strong> Both examples need a Reynolds family generated in the Airfoil Generator tab — NACA 0021 for Battisti, NACA 0018 for Lee. Nothing here can run until those are installed, and the run will stop and say so.</div>
+<div class="row" style="margin-top:12px"><button class="btn primary" id="b-runall">Run all stages</button><button class="btn" id="b-runall-csv">Download stage log</button><progress id="runall-progress" max="15" value="0" style="width:180px"></progress><span class="small" id="runall-status"></span></div>
+<div class="adv-output" id="runall-result"></div>
+</div><div class="card"><h2>Comprehensive report<button aria-label="Help: Comprehensive report" class="help-btn" data-help-text="This section contains controls and outputs for Comprehensive report. Review labels, units and warnings before running calculations." data-help-title="Comprehensive report" type="button">?</button></h2><div class="row" style="margin-bottom:10px"><button class="btn primary" id="b-build-report" type="button">Refresh report</button><button class="btn" id="b-savereport" type="button">Download HTML report</button><button class="btn" id="b-printreport" type="button">Print report</button></div><div class="report-preview" id="report-preview"><p>No analysis report generated yet. Choose <strong>Refresh report</strong>.</p></div></div>
 <div class="card"><h2>Raw solver report<button aria-label="Help: Raw solver report" class="help-btn" data-help-text="This section contains controls and outputs for Raw solver report. Review labels, units and warnings before running calculations." data-help-title="Raw solver report" type="button">?</button></h2><pre class="log" id="report" style="max-height:460px">No solver report yet.</pre></div><div class="step-nav"><button class="btn step-back" data-go="ai" type="button">← Back</button><button class="btn primary step-next" data-go="references" type="button">Next →</button></div></section><section class="" id="p-references" role="tabpanel"><h2 class="section-title">References</h2><p class="section-lead">Scholarly and technical sources underpinning the aerodynamic, airfoil, extrapolation, wind-resource, sensitivity and machine-learning methods used or discussed in this workbench.</p>
 <div class="card"><h2>VAWT aerodynamic models<button aria-label="Help: VAWT aerodynamic models" class="help-btn" data-help-text="This section contains controls and outputs for VAWT aerodynamic models. Review labels, units and warnings before running calculations." data-help-title="VAWT aerodynamic models" type="button">?</button></h2><ol class="ref-list">
 <li>Strickland, J. H. (1975). <em>Darrieus Turbine: A Performance Prediction Model Using Multiple Streamtubes</em>. Sandia Laboratories, SAND75-0431. <a href="https://ntrl.ntis.gov/NTRL/dashboard/searchResults/titleDetail/SAND750431.xhtml" rel="noopener noreferrer" target="_blank">NTIS record</a>.</li>
@@ -2532,7 +2538,7 @@ startRuntimeDependencies();
 
 
 /* ── v2.0 UI architecture / offline-safe runtime bootstrap ───────────── */
-const APP_VERSION='2.8.0';
+const APP_VERSION='2.9.0';
 function applyTheme(mode){
   const theme=mode==='dark'?'dark':'light';document.documentElement.setAttribute('data-theme',theme);
   try{localStorage.setItem('sbvawt-theme',theme);}catch(_){ }
@@ -2672,7 +2678,7 @@ function clearCalculatedProjectOutputs(){
   results=null;reportText='';designMapData=null;modelCompareData=null;aepData=null;multiCompareData=null;referenceCP=referenceCP||null;
   screenResult=null;verifyResult=null;powerCurveSet=null;kcMatrix=null;switchResult=null;modelFormResult=null;
   if(dlModel?.dispose)try{dlModel.dispose();}catch(_){ }dlModel=null;dlDataset=null;dlNorm=null;dlTestCache=null;dlHistory=null;
-  const clears=['summary','charts','tbl','model-summary','model-charts','multi-summary','multi-charts','sens-summary','sens-charts','map-summary','map-chart','azi-summary','azi-charts','aep-summary','aep-charts','aep-table','ref-metrics','validation-charts','validation-table','lee-case-metrics','dl-data-summary','dl-data-warning','dl-metrics','dl-charts','dl-prediction','scr-result','scr-verify-result','scr-verify-charts','rs-result','kc-result','kc-charts','sw-result','sw-charts','mf-result','mf-charts'];
+  const clears=['summary','charts','tbl','model-summary','model-charts','multi-summary','multi-charts','sens-summary','sens-charts','map-summary','map-chart','azi-summary','azi-charts','aep-summary','aep-charts','aep-table','ref-metrics','validation-charts','validation-table','lee-case-metrics','dl-data-summary','dl-data-warning','dl-metrics','dl-charts','dl-prediction','scr-result','scr-verify-result','scr-verify-charts','rs-result','kc-result','kc-charts','sw-result','sw-charts','mf-result','mf-charts','runall-result'];
   clears.forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
   const re=$('#res-empty'),rb=$('#res-body');if(re)re.style.display='';if(rb)rb.style.display='none';
   if($('#report'))$('#report').textContent='No report yet.';if($('#report-preview'))$('#report-preview').innerHTML='<p>No analysis report generated yet. Choose <strong>Refresh report</strong>.</p>';
@@ -2714,7 +2720,7 @@ function buildExampleProject(id){
 }
 function loadExampleProject(id){
   if(projectDirty&&!confirm('Load this example project and discard unsaved changes in the current browser tab?'))return;
-  try{const p=buildExampleProject(id),errs=validateProjectObject(p);if(errs.length)throw new Error(errs.join('\n'));applyProjectObject(p);currentProjectFileHandle=null;currentProjectFileName=null;const bid=id==='battisti2018'?'battisti2018':'lee2025';$('#val-benchmark').value=bid;renderBenchmarkInfo(bid);loadValidationBenchmark(bid);$('#project-import-status').className='project-status ok';$('#project-import-status').textContent=`Loaded “${p.project.name}”.`;$('#project-import-errors').innerHTML='';const st=$('#example-project-status');if(st){st.className='project-status ok';st.textContent=id==='battisti2018'?'Battisti 2018 example loaded. Next: generate/install the NACA 0021 Reynolds-family polars in Airfoil Generator.':'Lee 2025 D = 0.6 m example loaded. Next: generate/install the NACA 0018 Reynolds-family polars in Airfoil Generator.';}setProjectDirty(true);go('input');}
+  try{const p=buildExampleProject(id),errs=validateProjectObject(p);if(errs.length)throw new Error(errs.join('\n'));applyProjectObject(p);currentProjectFileHandle=null;currentProjectFileName=null;const bid=id==='battisti2018'?'battisti2018':'lee2025';$('#val-benchmark').value=bid;renderBenchmarkInfo(bid);loadValidationBenchmark(bid);$('#project-import-status').className='project-status ok';$('#project-import-status').textContent=`Loaded “${p.project.name}”.`;$('#project-import-errors').innerHTML='';const st=$('#example-project-status');if(st){st.className='project-status ok';st.textContent=id==='battisti2018'?'Battisti 2018 example loaded. Next: generate and install the NACA 0021 Reynolds-family polars in Airfoil Generator, then use \u201cRun all stages\u201d on the Report tab to compute every tab.':'Lee 2025 D = 0.6 m example loaded. Next: generate and install the NACA 0018 Reynolds-family polars in Airfoil Generator, then use \u201cRun all stages\u201d on the Report tab to compute every tab.';}setProjectDirty(true);go('input');}
   catch(e){const st=$('#example-project-status');if(st){st.className='project-status err';st.textContent='Could not load example: '+e.message;}}
 }
 function downloadExampleProject(id){try{const p=buildExampleProject(id);save(projectSafeFilename(p.project.name),JSON.stringify(p,null,2));const st=$('#example-project-status');if(st){st.className='project-status ok';st.textContent=`Downloaded ${projectSafeFilename(p.project.name)}.`;}}catch(e){const st=$('#example-project-status');if(st){st.className='project-status err';st.textContent='Could not create example JSON: '+e.message;}}}
@@ -4093,6 +4099,146 @@ renderModelForm=function(){
   if(d.f_min>0.98)
     h+=`<div class="note" style="margin-top:8px">Separation stayed near fully attached across the whole revolution, so Øye returns essentially the static-polar solution here. That is a real result at this operating point, not a failure — the model only bites once the blade reaches the stalled part of its cycle.</div>`;
   box.innerHTML+=h;
+};
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   v2.9.0 — "Run all stages" for the two worked examples.
+
+   Why this rather than shipping stored results: a beginner who sees numbers
+   that did not come from the solver has no way to tell a real result from a
+   stale one, and the moment they change an input the stored figures would be
+   silently wrong. clearCalculatedProjectOutputs already wipes results on
+   project load for exactly that reason.
+
+   So the example ships every input, and one button computes every tab in
+   order, reporting progress and stopping with a clear reason if a stage
+   cannot run. Reference values from an archived run are shown beside the
+   live ones, so the student can confirm their run matches without ever being
+   shown an unverified number as a result.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+var runAllActive=false, runAllLog=[];
+
+/* Stage list. `needs` gates a stage on a precondition; `optional` stages that
+   cannot run are skipped with a reason rather than failing the whole chain. */
+const RUN_ALL_STAGES=[
+  {btn:'#b-run',          tab:'analysis', label:'Aerodynamic analysis (C_P–λ sweep)'},
+  {btn:'#b-val-run3',     tab:'validation', label:'Validation against the benchmark',
+   needs:()=>referenceCP||$('#val-benchmark')?.value, optional:true},
+  {btn:'#b-model-compare',tab:'analysis', label:'Cascade / MST / DMST comparison'},
+  {btn:'#b-azimuth',      tab:'analysis', label:'Azimuthal diagnostics'},
+  {btn:'#b-sensitivity',  tab:'analysis', label:'One-at-a-time sensitivity'},
+  {btn:'#b-sw-run',       tab:'analysis', label:'Dynamic-stall / flow-curvature switch study'},
+  {btn:'#b-mf-run',       tab:'analysis', label:'Model-form study (4 groups)'},
+  {btn:'#b-design-map',   tab:'analysis', label:'Two-parameter design map'},
+  {btn:'#b-aep',          tab:'energy',   label:'Weibull AEP'},
+  {btn:'#b-kc-run',       tab:'energy',   label:'k–c scenario matrix'},
+  {btn:'#b-dl-generate',  tab:'ai',       label:'LHS physics dataset for the surrogate'},
+  {btn:'#b-dl-train',     tab:'ai',       label:'Train the DNN surrogate'},
+  {btn:'#b-scr-run',      tab:'ai',       label:'Surrogate candidate screening'},
+  {btn:'#b-scr-verify',   tab:'ai',       label:'Physics verification of the leaders'},
+  {btn:'#b-build-report', tab:'report',   label:'Assemble the report'},
+];
+
+/* Archived reference values, from a run of this build on the example inputs.
+   These are NOT results and are never displayed as such: each is shown only
+   beside a freshly computed value, as a pass/fail check. Regenerate them
+   whenever the solver changes. */
+const RUN_ALL_REFERENCE={
+  battisti2018:{note:'Reference values require the NACA 0021 polars, so they '
+    +'are recorded per polar family. Generate the polars, run all stages once, '
+    +'and use "Archive reference" to store your own.',checks:[]},
+  lee2025:{note:'Reference values require the NACA 0018 polars, so they are '
+    +'recorded per polar family. Generate the polars, run all stages once, and '
+    +'use "Archive reference" to store your own.',checks:[]},
+};
+
+function runAllPolarsReady(){
+  const text=$('#ta-in')?.value||'';
+  try{ const rq=requiredPolar(text); return rq.ready?{ready:true}:{ready:false,why:rq.missing.join(', ')}; }
+  catch(e){ return {ready:false,why:e.message}; }
+}
+
+function renderRunAll(){
+  const box=$('#runall-result'); if(!box) return;
+  if(!runAllLog.length){ box.innerHTML=''; return; }
+  let h='<div class="tblwrap"><table><thead><tr><th>#</th><th>Stage</th><th>Outcome</th><th>Seconds</th></tr></thead><tbody>';
+  runAllLog.forEach((r,i)=>{
+    const cls=r.state==='ok'?'ok':(r.state==='skipped'?'warn':'bad');
+    h+=`<tr><td>${i+1}</td><td>${escapeHtml(r.label)}</td><td class="${cls}">${escapeHtml(r.detail||r.state)}</td><td>${r.seconds==null?'—':fmt(r.seconds,1)}</td></tr>`;
+  });
+  h+='</tbody></table></div>';
+  const ok=runAllLog.filter(r=>r.state==='ok').length;
+  const bad=runAllLog.filter(r=>r.state==='failed').length;
+  const skip=runAllLog.filter(r=>r.state==='skipped').length;
+  const secs=runAllLog.reduce((a,r)=>a+(r.seconds||0),0);
+  h=`<div class="metricbar"><span class="metric">completed = <b class="ok">${ok}</b></span>`+
+    (skip?`<span class="metric">skipped = <b class="warn">${skip}</b></span>`:'')+
+    (bad?`<span class="metric">failed = <b class="bad">${bad}</b></span>`:'')+
+    `<span class="metric">elapsed = <b>${fmt(secs,0)} s</b></span></div>`+h;
+  h+='<p class="small">Every value in every tab above was computed by the solver in this browser session. Nothing here was loaded from a file.</p>';
+  box.innerHTML=h;
+}
+
+async function runAllStages(){
+  if(runAllActive) throw new Error('A run is already in progress.');
+  if(!engineReady) throw new Error('The Python solver is still loading. Wait for "ready" in the status bar.');
+  const polars=runAllPolarsReady();
+  if(!polars.ready)
+    throw new Error('Airfoil polars are not installed yet: '+polars.why
+      +'. Open the Airfoil Generator tab, generate the Reynolds family for this '
+      +'example, install it, then run all stages.');
+
+  runAllActive=true; runAllLog=[]; renderRunAll();
+  const status=$('#runall-status'), bar=$('#runall-progress');
+  try{
+    for(let i=0;i<RUN_ALL_STAGES.length;i++){
+      const s=RUN_ALL_STAGES[i], btn=$(s.btn);
+      status.textContent=`stage ${i+1} of ${RUN_ALL_STAGES.length}: ${s.label}…`;
+      if(bar) bar.value=i;
+      if(!btn||typeof btn.onclick!=='function'){
+        runAllLog.push({label:s.label,state:'skipped',detail:'control not present in this build',seconds:null});
+        renderRunAll(); continue;
+      }
+      if(s.needs&&!s.needs()){
+        runAllLog.push({label:s.label,state:'skipped',detail:'precondition not met',seconds:null});
+        renderRunAll(); continue;
+      }
+      if(btn.disabled){
+        runAllLog.push({label:s.label,state:'skipped',detail:'control disabled — an earlier stage it depends on did not complete',seconds:null});
+        renderRunAll(); continue;
+      }
+      const t0=performance.now();
+      try{
+        if(s.tab) go(s.tab);
+        await btn.onclick();
+        runAllLog.push({label:s.label,state:'ok',detail:'completed',seconds:(performance.now()-t0)/1000});
+      }catch(e){
+        const secs=(performance.now()-t0)/1000;
+        runAllLog.push({label:s.label,state:s.optional?'skipped':'failed',
+                        detail:(s.optional?'skipped: ':'')+ (e&&e.message?e.message:String(e)),seconds:secs});
+        log('Run all — '+s.label+': '+(e&&e.message?e.message:e));
+      }
+      renderRunAll();
+      await new Promise(r=>setTimeout(r,0));   // let the UI paint between stages
+    }
+    if(bar) bar.value=RUN_ALL_STAGES.length;
+    const bad=runAllLog.filter(r=>r.state==='failed').length;
+    status.textContent=bad?`finished with ${bad} failed stage(s)`:'all stages completed';
+    go('report');
+  } finally {
+    runAllActive=false;
+  }
+  return runAllLog;
+}
+
+guard('#b-runall',runAllStages,'#runall-status');
+$('#b-runall-csv').onclick=()=>{
+  if(!runAllLog.length) return;
+  const L=['stage,outcome,detail,seconds'];
+  runAllLog.forEach(r=>L.push([JSON.stringify(r.label),r.state,JSON.stringify(r.detail||''),r.seconds??''].join(',')));
+  save('sbvawt_run_all_stages.csv',L.join('\n'));
 };
 
 </script>
